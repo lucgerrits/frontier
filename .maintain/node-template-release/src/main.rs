@@ -154,6 +154,11 @@ fn update_top_level_cargo_toml(
 	let mut profile = toml::value::Table::new();
 	profile.insert("release".into(), panic_unwind.into());
 
+	let mut package = toml::value::Table::new();
+	package.insert("edition".into(), "2021".into());
+	package.insert("authors".into(), toml::Value::Array(vec!["".into()]));
+	package.insert("repository".into(), "".into());
+
 	cargo_toml.insert("profile".into(), profile.into());
 
 	let members = workspace_members
@@ -170,10 +175,11 @@ fn update_top_level_cargo_toml(
 		})
 		.collect::<Vec<_>>();
 
-	let mut members_section = toml::value::Table::new();
-	members_section.insert("members".into(), members.into());
+	let mut current_workspace = cargo_toml.get("workspace").unwrap().clone().try_into::<toml::value::Table>().unwrap();
+	current_workspace.insert("members".into(), members.into());
+	current_workspace.insert("package".into(), package.into());
 
-	cargo_toml.insert("workspace".into(), members_section.into());
+	cargo_toml.insert("workspace".into(), current_workspace.into());
 }
 
 fn write_cargo_toml(path: &Path, cargo_toml: CargoToml) {
